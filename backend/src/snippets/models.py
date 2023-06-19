@@ -2,19 +2,17 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
-class SnippetCreate(BaseModel):
+class SnippetBase(BaseModel):
     title: str
     description: str
     content: str
     language_id: str
-    user_email: str
-    createdAt: datetime = datetime.utcnow()
+    createdAt: datetime | None = None
+    updatedAt: datetime | None = None
 
 
-class SnippetUpdate(BaseModel):
+class SnippetUpdate(SnippetBase):
     title: str | None = None
     description: str | None = None
     content: str | None = None
     language_id: str | None = None
-    user_email: str | None = None
-    updatedAt: datetime = datetime.utcnow()

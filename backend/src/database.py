@@ -1,8 +1,3 @@
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
+from google.cloud import firestore
 
-cred = credentials.Certificate('firestore-key.json')
-
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+db = firestore.Client()

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from database import db
+from datetime import datetime
 from fastapi.encoders import jsonable_encoder
-from snippets.models import SnippetCreate, SnippetUpdate
+from snippets.models import SnippetBase, SnippetUpdate
 
 router = APIRouter()
 
@@ -33,7 +34,8 @@ async def get_snippet(id: str):
 
 
 @router.post("/snippets/")
-async def create_snippet(snippetCreate: SnippetCreate):
+async def create_snippet(snippetCreate: SnippetBase):
+    snippetCreate.createdAt = datetime.utcnow()
     create_time, doc_ref = db.collection("snippets").add(snippetCreate.dict())
     return (f"Snippet Id {doc_ref.id} created successfully")
 
@@ -47,6 +49,12 @@ async def delete_snippet(id: str):
 
 @router.put("/snippets/{id}")
 async def update_snippet(id: str, snippetUpdate: SnippetUpdate):
-    # update_snippet_encoded = jsonable_encoder(snippetUpdate.dict())
     doc_ref = db.collection("snippets").document(id)
-    doc_ref.update(snippetUpdate.dict())
+    original_snippet_data = doc_ref.get().to_dict()
+    original_snippet_model = SnippetUpdate(**original_snippet_data)
+    update_data = snippetUpdate.dict(exclude_unset=True)
+    updated_snippet = original_snippet_model.copy(update=update_data)
+    updated_snippet.updatedAt = datetime.utcnow()
+    doc_ref.update(updated_snippet.dict())
+    new_ref = db.collection("snippets").document(id)
+    return (new_ref.get().to_dict())
