@@ -1,18 +1,17 @@
 from fastapi import APIRouter, HTTPException
 from database import db
 from datetime import datetime
-from fastapi.encoders import jsonable_encoder
-from snippets.models import SnippetBase, SnippetUpdate
+from snippets.models import SnippetBase, SnippetGet, SnippetUpdate
 
 router = APIRouter()
 
 
-@router.get("/snippets")
+@router.get("/snippets", response_model=list[SnippetGet])
 async def get_all_snippets():
     docs = db.collection("snippets").stream()
-    if not docs:
+    doc_list = list(docs)
+    if len(doc_list) == 0:
         raise HTTPException(status_code=404, detail="Snippets not found.")
-
     snippets = []
     for doc in docs:
         snippet = doc.to_dict()
@@ -22,11 +21,11 @@ async def get_all_snippets():
     return snippets
 
 
-@router.get("/snippets/{id}")
+@router.get("/snippets/{id}", response_model=SnippetGet)
 async def get_snippet(id: str):
     doc_ref = db.collection("snippets").document(id)
     doc = doc_ref.get()
-    if not doc:
+    if not doc.exists:
         raise HTTPException(status_code=404, detail="Snippet not found.")
     snippet = doc.to_dict()
     snippet["id"] = id

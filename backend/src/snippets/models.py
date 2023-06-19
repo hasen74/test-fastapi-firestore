@@ -7,8 +7,14 @@ class SnippetBase(BaseModel):
     description: str
     content: str
     language_id: str
+    user_email: str
+    tags: set[str] = set()
     createdAt: datetime | None = None
     updatedAt: datetime | None = None
+
+
+class SnippetGet(SnippetBase):
+    id: str
 
 
 class SnippetUpdate(SnippetBase):
@@ -16,3 +22,5 @@ class SnippetUpdate(SnippetBase):
     description: str | None = None
     content: str | None = None
     language_id: str | None = None
+    user_email: str | None = None
+    tags: set[str] | None = None
