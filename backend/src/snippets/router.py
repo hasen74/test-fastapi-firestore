@@ -6,13 +6,31 @@ from snippets.models import SnippetBase, SnippetGet, SnippetUpdate
 router = APIRouter()
 
 
+# Get all snippets with search options (query params)
 @router.get("/snippets", response_model=list[SnippetGet], tags=["snippets"])
-async def get_all_snippets():
+async def get_all_snippets(
+    tag: str | None = None,
+    lang: str | None = None,
+    user: str | None = None
+):
 
-    docs = db.collection("snippets").stream()
+    # Get the collection ref and filter by language and tag if provided
+    snippets_ref = db.collection("snippets")
+    query = snippets_ref
+    if lang:
+        query = query.where("language_id", "==", lang)
+    if tag:
+        query = query.where("tags", "array_contains", tag)
+    if user:
+        query = query.where("user_email", "==", user)
+
+    # Use of stream() generator to iterate through results
+    docs = query.stream()
     doc_list = list(docs)
+
     if len(doc_list) == 0:
         raise HTTPException(status_code=404, detail="Snippets not found.")
+
     snippets = []
     for doc in doc_list:
         snippet = doc.to_dict()
@@ -21,6 +39,7 @@ async def get_all_snippets():
     return snippets
 
 
+# Get one snippet by id
 @router.get("/snippets/{id}", response_model=SnippetGet, tags=["snippets"])
 async def get_snippet(id: str):
     doc_ref = db.collection("snippets").document(id)
@@ -33,6 +52,7 @@ async def get_snippet(id: str):
     return snippet
 
 
+# Create a snippet
 @router.post(
     "/snippets/",
     status_code=status.HTTP_201_CREATED,
@@ -55,6 +75,7 @@ async def create_snippet(snippetCreate: SnippetBase):
         )
 
 
+# Delete a snippet by id
 @router.delete("/snippets/{id}", response_model=SnippetGet, tags=["snippets"])
 async def delete_snippet(id: str):
     try:
@@ -71,6 +92,7 @@ async def delete_snippet(id: str):
         )
 
 
+# Update a snippet by id
 @router.put("/snippets/{id}", response_model=SnippetGet, tags=["snippets"])
 async def update_snippet(id: str, snippetUpdate: SnippetUpdate):
     try:
