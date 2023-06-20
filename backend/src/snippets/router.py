@@ -11,16 +11,15 @@ router = APIRouter()
 @router.get("/snippets", response_model=list[SnippetGet], tags=["snippets"])
 async def get_all_snippets(
     tags: Annotated[list[str] | None, Query()] = None,
-    langs: Annotated[list[str] | None, Query()] = None,
+    lang: str | None = None,
     user: str | None = None
 ):
 
     # Get the collection ref and filter by language and tag if provided
     snippets_ref = db.collection("snippets")
     query = snippets_ref
-    if langs:
-        for lang in langs:
-            query = query.where("language_id", "==", lang)
+    if lang:
+        query = query.where("language_id", "==", lang)
     if tags:
         query = query.where("tags_id", "array_contains_any", tags)
     if user:
