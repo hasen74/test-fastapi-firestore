@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
+from typing import Annotated
 from database import db
 from datetime import datetime
 from snippets.models import SnippetBase, SnippetGet, SnippetUpdate
@@ -9,18 +10,19 @@ router = APIRouter()
 # Get all snippets with search options (query params)
 @router.get("/snippets", response_model=list[SnippetGet], tags=["snippets"])
 async def get_all_snippets(
-    tag: str | None = None,
-    lang: str | None = None,
+    tags: Annotated[list[str] | None, Query()] = None,
+    langs: Annotated[list[str] | None, Query()] = None,
     user: str | None = None
 ):
 
     # Get the collection ref and filter by language and tag if provided
     snippets_ref = db.collection("snippets")
     query = snippets_ref
-    if lang:
-        query = query.where("language_id", "==", lang)
-    if tag:
-        query = query.where("tags", "array_contains", tag)
+    if langs:
+        for lang in langs:
+            query = query.where("language_id", "==", lang)
+    if tags:
+        query = query.where("tags_id", "array_contains_any", tags)
     if user:
         query = query.where("user_email", "==", user)
 
