@@ -6,7 +6,7 @@ from snippets.models import SnippetBase, SnippetGet, SnippetUpdate
 router = APIRouter()
 
 
-@router.get("/snippets", response_model=list[SnippetGet], tags=['snippets'])
+@router.get("/snippets", response_model=list[SnippetGet], tags=["snippets"])
 async def get_all_snippets():
     docs = db.collection("snippets").stream()
     doc_list = list(docs)
@@ -17,11 +17,10 @@ async def get_all_snippets():
         snippet = doc.to_dict()
         snippet["id"] = doc.id
         snippets.append(snippet)
-
     return snippets
 
 
-@router.get("/snippets/{id}", response_model=SnippetGet, tags=['snippets'])
+@router.get("/snippets/{id}", response_model=SnippetGet, tags=["snippets"])
 async def get_snippet(id: str):
     doc_ref = db.collection("snippets").document(id)
     doc = doc_ref.get()
@@ -32,28 +31,52 @@ async def get_snippet(id: str):
     return snippet
 
 
-@router.post("/snippets/", status_code=status.HTTP_201_CREATED, tags=['snippets'])
+@router.post(
+    "/snippets/",
+    status_code=status.HTTP_201_CREATED,
+    tags=["snippets"]
+    )
 async def create_snippet(snippetCreate: SnippetBase):
-    snippetCreate.createdAt = datetime.utcnow()
-    create_time, doc_ref = db.collection("snippets").add(snippetCreate.dict())
-    return (f"Snippet Id {doc_ref.id} created successfully")
+    try:
+        snippetCreate.createdAt = datetime.utcnow()
+        create_time, doc_ref = db.collection("snippets").add(
+            snippetCreate.dict()
+        )
+        return f"Snippet Id {doc_ref.id} created successfully"
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error adding snippet."
+        )
 
 
-@router.delete("/snippets/{id}", tags=['snippets'])
+@router.delete("/snippets/{id}", tags=["snippets"])
 async def delete_snippet(id: str):
-    doc_ref = db.collection("snippets").document(id)
-    doc_ref.delete()
-    return (f"Snippet Id {doc_ref.id} deleted successfully")
+    try:
+        doc_ref = db.collection("snippets").document(id)
+        doc_ref.delete()
+        return f"Snippet Id {doc_ref.id} deleted successfully"
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error deleting snippet."
+        )
 
 
-@router.put("/snippets/{id}", tags=['snippets'])
+@router.put("/snippets/{id}", tags=["snippets"])
 async def update_snippet(id: str, snippetUpdate: SnippetUpdate):
-    doc_ref = db.collection("snippets").document(id)
-    original_snippet_data = doc_ref.get().to_dict()
-    original_snippet_model = SnippetUpdate(**original_snippet_data)
-    update_data = snippetUpdate.dict(exclude_unset=True)
-    updated_snippet = original_snippet_model.copy(update=update_data)
-    updated_snippet.updatedAt = datetime.utcnow()
-    doc_ref.update(updated_snippet.dict())
-    new_ref = db.collection("snippets").document(id)
-    return (new_ref.get().to_dict())
+    try:
+        doc_ref = db.collection("snippets").document(id)
+        original_snippet_data = doc_ref.get().to_dict()
+        original_snippet_model = SnippetUpdate(**original_snippet_data)
+        update_data = snippetUpdate.dict(exclude_unset=True)
+        updated_snippet = original_snippet_model.copy(update=update_data)
+        updated_snippet.updatedAt = datetime.utcnow()
+        doc_ref.update(updated_snippet.dict())
+        new_ref = db.collection("snippets").document(id)
+        return new_ref.get().to_dict()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error updating snippet."
+        )
