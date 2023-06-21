@@ -5,16 +5,14 @@ from comments.models import CommentBase, CommentGet, CommentUpdate
 
 router = APIRouter()
 
-collection_ref = db.collection("comments")
-
 
 # Get all comments
 @router.get("/comments", response_model=list[CommentGet], tags=["comments"])
 async def get_all_comments():
 
-    comments_ref = collection_ref
+    comments_ref = db.collection("comments")
     query = comments_ref
-    docs = await query.stream()
+    docs = query.stream()
     doc_list = list(docs)
 
     if len(doc_list) == 0:
@@ -31,8 +29,8 @@ async def get_all_comments():
 # Get one comment by id
 @router.get("/comments/{id}", response_model=CommentGet, tags=["comments"])
 async def get_comment(id: str):
-    doc_ref = collection_ref.document(id)
-    doc = await doc_ref.get()
+    doc_ref = db.collection("comments").document(id)
+    doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Comment not found.")
 
@@ -51,7 +49,7 @@ async def get_comment(id: str):
 async def create_comment(commentCreate: CommentBase):
     try:
         commentCreate.createdAt = datetime.utcnow()
-        create_time, doc_ref = await collection_ref.add(
+        create_time, doc_ref = db.collection("comments").add(
             commentCreate.dict()
         )
         new_comment = CommentGet(id=doc_ref.id, **commentCreate.dict())
@@ -72,9 +70,9 @@ async def create_comment(commentCreate: CommentBase):
   )
 async def delete_comment(id: str):
     try:
-        doc_ref = collection_ref.document(id)
+        doc_ref = db.collection("comments").document(id)
         comment_to_delete = doc_ref.get().to_dict()
-        await doc_ref.delete()
+        doc_ref.delete()
         deleted_comment = CommentGet(id=doc_ref.id, **comment_to_delete)
         return deleted_comment
 
@@ -89,15 +87,15 @@ async def delete_comment(id: str):
 @router.put("/comments/{id}", response_model=CommentGet, tags=["comments"])
 async def update_comment(id: str, commentUpdate: CommentUpdate):
     try:
-        doc_ref = collection_ref.document(id)
-        original_comment_data = await doc_ref.get().to_dict()
+        doc_ref = db.collection("comments").document(id)
+        original_comment_data = doc_ref.get().to_dict()
         original_comment_model = CommentUpdate(**original_comment_data)
         update_data = commentUpdate.dict(exclude_unset=True)
         updated_comment = original_comment_model.copy(update=update_data)
         updated_comment.updatedAt = datetime.utcnow()
-        await doc_ref.update(updated_comment.dict())
+        doc_ref.update(updated_comment.dict())
 
-        updated_doc = await doc_ref.get()
+        updated_doc = doc_ref.get()
         final_comment = updated_doc.to_dict()
         final_comment["id"] = id
 

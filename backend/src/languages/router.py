@@ -5,14 +5,13 @@ from languages.models import LanguageBase, LanguageGet, LanguageUpdate
 
 router = APIRouter()
 
-collection_ref = db.collection("languages")
-
 
 # Get all languages
 @router.get("/languages", response_model=list[LanguageGet], tags=["languages"])
 async def get_all_languages():
 
-    query = collection_ref
+    languages_ref = db.collection("languages")
+    query = languages_ref
     docs = query.stream()
     doc_list = list(docs)
 
@@ -30,7 +29,7 @@ async def get_all_languages():
 # Get one language by id
 @router.get("/languages/{id}", response_model=LanguageGet, tags=["languages"])
 async def get_language(id: str):
-    doc_ref = collection_ref.document(id)
+    doc_ref = db.collection("languages").document(id)
     doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Language not found.")
@@ -50,7 +49,7 @@ async def get_language(id: str):
 async def create_language(languageCreate: LanguageBase):
     try:
         languageCreate.createdAt = datetime.utcnow()
-        create_time, doc_ref = collection_ref.add(
+        create_time, doc_ref = db.collection("languages").add(
             languageCreate.dict()
         )
         new_language = LanguageGet(id=doc_ref.id, **languageCreate.dict())
@@ -71,7 +70,7 @@ async def create_language(languageCreate: LanguageBase):
   )
 async def delete_language(id: str):
     try:
-        doc_ref = collection_ref.document(id)
+        doc_ref = db.collection("languages").document(id)
         language_to_delete = doc_ref.get().to_dict()
         doc_ref.delete()
         deleted_language = LanguageGet(id=doc_ref.id, **language_to_delete)
@@ -88,7 +87,7 @@ async def delete_language(id: str):
 @router.put("/languages/{id}", response_model=LanguageGet, tags=["languages"])
 async def update_language(id: str, languageUpdate: LanguageUpdate):
     try:
-        doc_ref = collection_ref.document(id)
+        doc_ref = db.collection("languages").document(id)
         original_language_data = doc_ref.get().to_dict()
         original_language_model = LanguageUpdate(**original_language_data)
         update_data = languageUpdate.dict(exclude_unset=True)

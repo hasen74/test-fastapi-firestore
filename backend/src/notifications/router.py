@@ -7,8 +7,6 @@ from notifications.models import (
 
 router = APIRouter()
 
-collection_ref = db.collection("notifications")
-
 
 # Get all notifications
 @router.get(
@@ -17,8 +15,9 @@ collection_ref = db.collection("notifications")
   tags=["notifications"])
 async def get_all_notifications():
 
-    query = collection_ref
-    docs = await query.stream()
+    notifications_ref = db.collection("notifications")
+    query = notifications_ref
+    docs = query.stream()
     doc_list = list(docs)
 
     if len(doc_list) == 0:
@@ -39,8 +38,8 @@ async def get_all_notifications():
   tags=["notifications"]
   )
 async def get_notification(id: str):
-    doc_ref = collection_ref.document(id)
-    doc = await doc_ref.get()
+    doc_ref = db.collection("notifications").document(id)
+    doc = doc_ref.get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Notification not found.")
 
@@ -59,7 +58,7 @@ async def get_notification(id: str):
 async def create_notification(notificationCreate: NotificationBase):
     try:
         notificationCreate.createdAt = datetime.utcnow()
-        create_time, doc_ref = await collection_ref.add(
+        create_time, doc_ref = db.collection("notifications").add(
             notificationCreate.dict()
         )
         new_notification = NotificationGet(
@@ -83,9 +82,9 @@ async def create_notification(notificationCreate: NotificationBase):
   )
 async def delete_notification(id: str):
     try:
-        doc_ref = collection_ref.document(id)
+        doc_ref = db.collection("notifications").document(id)
         notification_to_delete = doc_ref.get().to_dict()
-        await doc_ref.delete()
+        doc_ref.delete()
         deleted_notification = NotificationGet(
           id=doc_ref.id,
           **notification_to_delete
@@ -107,8 +106,8 @@ async def delete_notification(id: str):
 )
 async def update_notification(id: str, notificationUpdate: NotificationUpdate):
     try:
-        doc_ref = collection_ref.document(id)
-        original_notification_data = await doc_ref.get().to_dict()
+        doc_ref = db.collection("notifications").document(id)
+        original_notification_data = doc_ref.get().to_dict()
         original_notification_model = NotificationUpdate(
           **original_notification_data
         )
@@ -117,9 +116,9 @@ async def update_notification(id: str, notificationUpdate: NotificationUpdate):
           update=update_data
         )
         updated_notification.updatedAt = datetime.utcnow()
-        await doc_ref.update(updated_notification.dict())
+        doc_ref.update(updated_notification.dict())
 
-        updated_doc = await doc_ref.get()
+        updated_doc = doc_ref.get()
         final_notification = updated_doc.to_dict()
         final_notification["id"] = id
 
