@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from database import db
 from datetime import datetime
-from users.models import UserBase, UserGet, UserUpdate
-from starlette.requests import Request
+from users.models import UserBase, UserGet, UserUpdate, Token
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -105,12 +104,11 @@ async def update_user(id: str, userUpdate: UserUpdate):
         )
 
 
-@router.get("/users/auth/{token}", tags=["users"])
-def authentication(token: str):
-    print(type(token))
+@router.post("/users/auth", tags=["users"])
+def authentication(token: Token):
     try:
         user = id_token.verify_oauth2_token(
-            token,
+            token.token,
             requests.Request(),
             "216068480773-7fka82gqqir77gq3f7ih4b3v5n006si8.apps.googleusercontent.com",
         )

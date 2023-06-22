@@ -24,13 +24,17 @@ export class LoginComponent {
       this.loggedIn = user != null;
       console.log(this.user);
       this.sendTokenToBackend(this.user.idToken)
-      this.router.navigate(['/snippets']);
     });
   }
 
   sendTokenToBackend(token: string) {
     this.userService.authUser(token).subscribe((response) => {
-      console.log('Response: ', response);
+      if (response != "unauthorized") {
+      this.router.navigate(['/snippets']);
+      alert(response);
+      } else {
+        alert(response)
+      }
     });
   }
 }

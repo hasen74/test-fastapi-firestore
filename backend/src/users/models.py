@@ -18,3 +18,7 @@ class UserUpdate(UserBase):
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
+
+
+class Token(BaseModel):
+    token: str
