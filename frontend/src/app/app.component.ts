@@ -7,20 +7,6 @@ import { Router } from '@angular/router';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit{
+export class AppComponent {
 
-  user!: SocialUser;
-  loggedIn!: boolean;
-  
-  constructor(
-    private authService: SocialAuthService
-    ) { }
-
-  ngOnInit() {
-    this.authService.authState.subscribe((user) => {
-      this.user = user;
-      this.loggedIn = (user != null);
-      console.log(this.user)
-    });
-  }
 }
