@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.10"
 fastapi = {extras = ["all"], version = "^0.97.0"}
 firebase-admin = "^6.1.0"
+google-auth = "^2.20.0"
 
 
 [build-system]

@@ -2,6 +2,10 @@ from fastapi import APIRouter, HTTPException, status
 from database import db
 from datetime import datetime
 from users.models import UserBase, UserGet, UserUpdate
+from starlette.requests import Request
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 router = APIRouter()
 
@@ -9,7 +13,6 @@ router = APIRouter()
 # Get all users
 @router.get("/users", response_model=list[UserGet], tags=["users"])
 async def get_all_users():
-
     users_ref = db.collection("users")
     query = users_ref
     docs = query.stream()
@@ -44,21 +47,19 @@ async def get_user(id: str):
     "/users/",
     status_code=status.HTTP_201_CREATED,
     response_model=UserGet,
-    tags=["users"]
-    )
+    tags=["users"],
+)
 async def create_user(userCreate: UserBase):
     try:
         userCreate.createdAt = datetime.utcnow()
-        create_time, doc_ref = db.collection("users").add(
-            userCreate.dict()
-        )
+        create_time, doc_ref = db.collection("users").add(userCreate.dict())
         new_user = UserGet(id=doc_ref.id, **userCreate.dict())
         return new_user
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error adding user: {str(e)}"
+            detail=f"Error adding user: {str(e)}",
         )
 
 
@@ -75,7 +76,7 @@ async def delete_user(id: str):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deleting user: {str(e)}"
+            detail=f"Error deleting user: {str(e)}",
         )
 
 
@@ -100,5 +101,21 @@ async def update_user(id: str, userUpdate: UserUpdate):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating user: {str(e)}"
+            detail=f"Error updating user: {str(e)}",
         )
+
+
+@router.get("/users/auth/{token}", tags=["users"])
+def authentication(token: str):
+    print(type(token))
+    try:
+        user = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            "216068480773-7fka82gqqir77gq3f7ih4b3v5n006si8.apps.googleusercontent.com",
+        )
+
+        return user["name"] + " Logged In successfully"
+
+    except ValueError:
+        return "unauthorized"
