@@ -6,12 +6,14 @@ from users.models import UserBase, UserGet, UserUpdate, Token
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
+from session import create_session
+
 router = APIRouter()
 
 
 # Get all users
 @router.get("/users", response_model=list[UserGet], tags=["users"])
-async def get_all_users():
+def get_all_users():
     users_ref = db.collection("users")
     query = users_ref
     docs = query.stream()
@@ -30,7 +32,7 @@ async def get_all_users():
 
 # Get one user by id
 @router.get("/users/{id}", response_model=UserGet, tags=["users"])
-async def get_user(id: str):
+def get_user(id: str):
     doc_ref = db.collection("users").document(id)
     doc = doc_ref.get()
     if not doc.exists:
@@ -48,7 +50,7 @@ async def get_user(id: str):
     response_model=UserGet,
     tags=["users"],
 )
-async def create_user(userCreate: UserBase):
+def create_user(userCreate: UserBase):
     try:
         userCreate.createdAt = datetime.utcnow()
         create_time, doc_ref = db.collection("users").add(userCreate.dict())
@@ -64,7 +66,7 @@ async def create_user(userCreate: UserBase):
 
 # Delete a user by id
 @router.delete("/users/{id}", response_model=UserGet, tags=["users"])
-async def delete_user(id: str):
+def delete_user(id: str):
     try:
         doc_ref = db.collection("users").document(id)
         user_to_delete = doc_ref.get().to_dict()
@@ -81,7 +83,7 @@ async def delete_user(id: str):
 
 # Update a user by id
 @router.put("/users/{id}", response_model=UserGet, tags=["users"])
-async def update_user(id: str, userUpdate: UserUpdate):
+def update_user(id: str, userUpdate: UserUpdate):
     try:
         doc_ref = db.collection("users").document(id)
         original_user_data = doc_ref.get().to_dict()
@@ -110,8 +112,11 @@ def authentication(token: Token):
         user = id_token.verify_oauth2_token(
             token.token,
             requests.Request(),
-            "216068480773-7fka82gqqir77gq3f7ih4b3v5n006si8.apps.googleusercontent.com",
+            """216068480773-7fka82gqqir77gq3f7ih4b3v5n006si8
+            .apps.googleusercontent.com""",
         )
+
+        print(create_session(token))
 
         return user["name"] + " Logged In successfully"
 
