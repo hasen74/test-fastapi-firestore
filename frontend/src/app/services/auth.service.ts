@@ -9,8 +9,6 @@ import { UserService } from '../services/user.service';
 export class AuthService {
   constructor(
     private authService: SocialAuthService,
-    private userService: UserService,
-    private router: Router
   ) {}
 
   user!: SocialUser;
@@ -23,22 +21,16 @@ export class AuthService {
       this.user = user;
       this.isLoggedIn = user != null;
       console.log(this.user);
-      this.sendTokenToBackend(this.user.idToken);
-    });
-  }
-
-  sendTokenToBackend(token: string) {
-    this.userService.authUser(token).subscribe((response) => {
-      if (response != 'unauthorized') {
-        this.router.navigate(['/snippets']);
-        alert(response);
-      } else {
-        alert(response);
-      }
+      localStorage.setItem('token', this.user.idToken);
     });
   }
 
   logout(): void {
     this.isLoggedIn = false;
+    localStorage.clear();
+  }
+
+  getToken() {
+    return localStorage.getItem('token');
   }
 }
