@@ -1,7 +1,6 @@
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { UserService } from '../services/user.service';
 
 @Injectable({
   providedIn: 'root',
@@ -9,6 +8,7 @@ import { UserService } from '../services/user.service';
 export class AuthService {
   constructor(
     private authService: SocialAuthService,
+    private router: Router
   ) {}
 
   user!: SocialUser;
@@ -22,6 +22,7 @@ export class AuthService {
       this.isLoggedIn = user != null;
       console.log(this.user);
       localStorage.setItem('token', this.user.idToken);
+      this.router.navigate(['/snippets']);
     });
   }
 
