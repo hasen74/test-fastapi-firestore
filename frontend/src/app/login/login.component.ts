@@ -12,6 +12,7 @@ export class LoginComponent {
   ) {}
 
   ngOnInit() {
+    console.log('in init')
     this.authService.login();
   }
 }
