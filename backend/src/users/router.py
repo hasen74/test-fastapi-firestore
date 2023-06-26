@@ -4,9 +4,10 @@ from datetime import datetime
 from users.models import UserBase, UserGet, UserUpdate, Token
 
 from google.oauth2 import id_token
-from google.auth.transport import requests
+import google.auth.transport.requests
 
-from session import create_session
+import cachecontrol
+import requests
 
 router = APIRouter()
 
@@ -109,16 +110,21 @@ def update_user(id: str, userUpdate: UserUpdate):
 @router.post("/users/auth", tags=["users"])
 def authentication(token: Token):
     try:
+
+        session = requests.session()
+        cached_session = cachecontrol.CacheControl(session)
+        request = google.auth.transport.requests.Request(
+            session=cached_session
+        )
         user = id_token.verify_oauth2_token(
             token.token,
-            requests.Request(),
-            """216068480773-7fka82gqqir77gq3f7ih4b3v5n006si8
-            .apps.googleusercontent.com""",
+            request
         )
-
-        print(create_session(token))
+        print(user)
 
         return user["name"] + " Logged In successfully"
 
     except ValueError:
+        import traceback
+        print(traceback.format_exc())
         return "unauthorized"
