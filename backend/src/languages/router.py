@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
-from database import db
+from src.database import db
 from datetime import datetime
-from languages.models import LanguageBase, LanguageGet, LanguageUpdate
+from src.languages.models import LanguageBase, LanguageGet, LanguageUpdate
 
 router = APIRouter()
 

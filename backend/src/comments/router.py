@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
-from database import db
+from src.database import db
 from datetime import datetime
-from comments.models import CommentBase, CommentGet, CommentUpdate
+from src.comments.models import CommentBase, CommentGet, CommentUpdate
 
 router = APIRouter()
 

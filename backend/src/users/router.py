@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
-from database import db
+from src.database import db
 from datetime import datetime
-from users.models import UserBase, UserGet, UserUpdate, Token
+from src.users.models import UserBase, UserGet, UserUpdate
 
-from google.oauth2 import id_token
-import google.auth.transport.requests
+# from google.oauth2 import id_token
+# import google.auth.transport.requests
 
-import cachecontrol
-import requests
+# import cachecontrol
+# import requests
 
 router = APIRouter()
 
@@ -106,25 +106,25 @@ def update_user(id: str, userUpdate: UserUpdate):
             detail=f"Error updating user: {str(e)}",
         )
 
+# @router.post("/users/auth", tags=["users"])
+# def authentication(token: Token):
+#     try:
 
-@router.post("/users/auth", tags=["users"])
-def authentication(token: Token):
-    try:
+#         session = requests.session()
+#         cached_session = cachecontrol.CacheControl(session)
+#         request = google.auth.transport.requests.Request(
+#             session=cached_session
+#         )
+#         user = id_token.verify_oauth2_token(
+#             token.token,
+#             request
+#         )
+#         print("in auth")
+#         print(user)
 
-        session = requests.session()
-        cached_session = cachecontrol.CacheControl(session)
-        request = google.auth.transport.requests.Request(
-            session=cached_session
-        )
-        user = id_token.verify_oauth2_token(
-            token.token,
-            request
-        )
-        print(user)
+#         return user["name"] + " Logged In successfully"
 
-        return user["name"] + " Logged In successfully"
-
-    except ValueError:
-        import traceback
-        print(traceback.format_exc())
-        return "unauthorized"
+#     except ValueError:
+#         import traceback
+#         print(traceback.format_exc())
+#         return "unauthorized"

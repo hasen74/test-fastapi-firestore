@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
-from database import db
+from src.database import db
 from datetime import datetime
-from tags.models import TagBase, TagGet, TagUpdate
+from src.tags.models import TagBase, TagGet, TagUpdate
 
 router = APIRouter()
 

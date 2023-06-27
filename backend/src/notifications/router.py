@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
-from database import db
+from src.database import db
 from datetime import datetime
-from notifications.models import (
+from src.notifications.models import (
   NotificationBase, NotificationGet, NotificationUpdate
 )
 
