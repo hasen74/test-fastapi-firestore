@@ -16,12 +16,12 @@ router = APIRouter()
     tags=["snippets"]
     )
 async def get_all_snippets(
-    token: Annotated[str, Depends(get_current_user)],
+    current_user: Annotated[str, Depends(get_current_user)],
     tags: Annotated[list[str] | None, Query()] = None,
     lang: str | None = None,
     user: str | None = None,
 ):
-    print(token)
+    print(current_user)
     # Get the collection ref and filter by language and tag if provided
     snippets_ref = db.collection("snippets")
     query = snippets_ref

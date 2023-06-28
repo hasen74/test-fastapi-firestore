@@ -1,13 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Annotated
 from src.database import db
 from datetime import datetime
+
 from src.users.models import UserBase, UserGet, UserUpdate
-
-# from google.oauth2 import id_token
-# import google.auth.transport.requests
-
-# import cachecontrol
-# import requests
+from src.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -105,26 +102,3 @@ def update_user(id: str, userUpdate: UserUpdate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating user: {str(e)}",
         )
-
-# @router.post("/users/auth", tags=["users"])
-# def authentication(token: Token):
-#     try:
-
-#         session = requests.session()
-#         cached_session = cachecontrol.CacheControl(session)
-#         request = google.auth.transport.requests.Request(
-#             session=cached_session
-#         )
-#         user = id_token.verify_oauth2_token(
-#             token.token,
-#             request
-#         )
-#         print("in auth")
-#         print(user)
-
-#         return user["name"] + " Logged In successfully"
-
-#     except ValueError:
-#         import traceback
-#         print(traceback.format_exc())
-#         return "unauthorized"

@@ -27,7 +27,6 @@ export class SnippetsListComponent implements OnInit {
     this.snippetService.getSnippets().subscribe((snippets: Snippet[]) => {
     this.snippets = snippets;
     console.log(this.snippets);
-    console.log(this.authService.user)
     });
   }
 }

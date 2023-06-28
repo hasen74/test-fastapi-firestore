@@ -25,14 +25,15 @@ def raise_403() -> NoReturn:
     )
 
 
+# Authorization dependency injected in api routes
 def get_current_user(
     creds: HTTPAuthorizationCredentials = Security(oauth2_scheme)
 ):
-    print(creds)
-    user = verify_token(creds.credentials)
-    return user
+    user_email = verify_token(creds.credentials)['email']
+    return user_email
 
 
+# Google idtoken verification with cache
 def verify_token(token: str) -> str:
     try:
         session = requests.session()
@@ -44,10 +45,8 @@ def verify_token(token: str) -> str:
             token,
             request
         )
-        print("in verify")
-        print(user)
         return user
     except ValueError:
         import traceback
         print(traceback.format_exc())
-        return "unauthorized"
+        return "Unauthorized"
