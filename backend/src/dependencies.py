@@ -1,72 +1,39 @@
 import cachecontrol
-import requests
-
-from fastapi import Request
-from fastapi.openapi.models import SecuritySchemeType
-from fastapi.security import HTTPAuthorizationCredentials
-from fastapi.security.http import HTTPBase
-
-from pydantic import BaseModel, Field
-
-from google.oauth2 import id_token
 import google.auth.transport.requests
+import requests
+from typing import NoReturn
+
+from fastapi import HTTPException, status, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from google.oauth2 import id_token
 
 
-def get_authorization_scheme_param(
-    authorization_header_value: str | None,
-) -> tuple[str, str]:
-    if not authorization_header_value:
-        return "", ""
-    scheme, _, param = authorization_header_value.partition(" ")
-    return scheme, param
+oauth2_scheme = HTTPBearer()
 
 
-class SecurityBase(BaseModel):
-    type_: SecuritySchemeType = Field(alias="type")
-    description: str | None = None
-
-    class Config:
-        extra = "allow"
-
-
-class HTTPBaseModel(SecurityBase):
-    type_ = Field(SecuritySchemeType.http, alias="type")
-    scheme: str
+def raise_401() -> NoReturn:
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authorized.",
+    )
 
 
-class HTTPBearer(HTTPBase):
-    def __init__(
-        self,
-        *,
-        scheme: str,
-        header: str,
-        description: str | None = None,
-        scheme_name: str | None = None,
-        auto_error: bool = True,
-    ):
-        self.model = HTTPBaseModel(scheme=scheme, description=description)
-        self.scheme_name = scheme_name or self.__class__.__name__
-        self.header = header
-        self.auto_error = auto_error
-
-    async def __call__(
-            self, request: Request
-            ) -> HTTPAuthorizationCredentials | None:
-        authorization = request.headers.get(self.header)
-        scheme, credentials = get_authorization_scheme_param(authorization)
-        if not (authorization and scheme and credentials):
-            return None
-        if scheme.lower() != "bearer":
-            return None
-        return HTTPAuthorizationCredentials(
-            scheme=scheme, credentials=credentials
-        )
+def raise_403() -> NoReturn:
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Forbidden.",
+    )
 
 
-oauth2_scheme = HTTPBearer(scheme="Bearer", header="Authorization")
+def get_current_user(
+    creds: HTTPAuthorizationCredentials = Security(oauth2_scheme)
+):
+    print(creds)
+    user = verify_token(creds.credentials)
+    return user
 
 
-def verify_token(credential: str) -> str:
+def verify_token(token: str) -> str:
     try:
         session = requests.session()
         cached_session = cachecontrol.CacheControl(session)
@@ -74,10 +41,11 @@ def verify_token(credential: str) -> str:
             session=cached_session
         )
         user = id_token.verify_oauth2_token(
-            credential,
+            token,
             request
         )
         print("in verify")
+        print(user)
         return user
     except ValueError:
         import traceback
